@@ -2,9 +2,10 @@ package crypto_lib
 
 import (
 	"strconv"
+	"unicode"
 )
 
-func hexToByteValue(hex string) (byte, error) {
+func HexToByteValue(hex string) (byte, error) {
 
 	val, err := strconv.ParseUint(hex, 16, 8)
 
@@ -24,7 +25,7 @@ func HexDecode(hexString string) ([]byte, error) {
 
 		hexByte := hexString[i: i+2]
 
-		byteVal, err := hexToByteValue(hexByte)
+		byteVal, err := HexToByteValue(hexByte)
 
 		if err != nil {
 			return nil, err
@@ -66,5 +67,45 @@ func XorDecrypt(ciphertext, key []byte) []byte {
 
 	return XorEncrypt(ciphertext, key)
 
+
+}
+
+func XorDecryptSingle(ciphertext []byte, key byte) []byte {
+	return XorEncryptSingle(ciphertext, key)
+}
+
+func XorEncryptSingle(plaintext []byte, key byte) []byte {
+
+	ciphertext := make([]byte, 0, len(plaintext))
+
+	for i := 0; i < len(plaintext); i++ {
+		ciphertext = append(ciphertext, plaintext[i] ^ key)
+	}
+
+	return ciphertext
+
+}
+
+func IsAlpha(s string) bool {
+
+	// iterate over the whole string
+	for _, c := range(s) {
+
+		// if not a letter, return false
+		if !unicode.IsLetter(c) {
+			if !unicode.IsPunct(c) {
+
+				if c != '\n' {
+					if c != '\t' {
+						if c != ' ' {
+							return false
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true
 
 }
