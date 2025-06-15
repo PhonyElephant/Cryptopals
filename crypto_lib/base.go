@@ -1,6 +1,8 @@
 package crypto_lib
 
 import (
+	"fmt"
+	"math"
 	"strconv"
 	"unicode"
 )
@@ -86,7 +88,7 @@ func XorEncryptSingle(plaintext []byte, key byte) []byte {
 
 }
 
-func IsAlpha(s string) bool {
+func IsText(s string) bool {
 
 	// iterate over the whole string
 	for _, c := range(s) {
@@ -107,5 +109,80 @@ func IsAlpha(s string) bool {
 	}
 
 	return true
+
+}
+
+// Finds possible plaintexts for a "Single Byte XOR Encrypted" ciphertext.
+//
+// Warning:
+// ciphertext should be actual byte values, so if it is in hex encoded format
+// you should decode it first by using HexDecode()
+func FindSingleByteXorPairs(ciphertext []byte) (map[byte]string, error) {
+
+	// key, plaintext pairs
+	possiblePlaintexts := make(map[byte]string)
+
+	// try all possible byte values (0 to 255)
+	var key byte
+	for key = range math.MaxUint8 {
+		
+		plaintextBytes := XorDecryptSingle(ciphertext, key)
+
+		plaintext := string(plaintextBytes)
+
+		// if plaintext looks like a 'text'
+		if IsText(plaintext) {
+			possiblePlaintexts[key] = plaintext
+		}
+
+	}
+
+	// if no possible plaintext is found
+	if len(possiblePlaintexts) == 0 {
+		return nil, fmt.Errorf("no possible plaintext found for: %s", HexEncode(ciphertext))
+	}
+
+	return possiblePlaintexts, nil
+
+}
+
+// Selects the more likely the correct plaintext among the possible plaintext
+// using heuristic methods. 
+func DecideForThePlaintext(possiblePlaintexts map[byte]string) (string, error) {
+
+	// we will use punctiation frequencies to decide which
+	// plaintext is a better candidate for real plaintext
+	punctiationFrequencies := make(map[byte]int)
+
+	// count the amount of punctiations used in the plaintexts
+	for k, v := range(possiblePlaintexts) {
+
+		punctiationFrequencies[k] = 0;
+
+		for _, ch := range(v) {
+			if (unicode.IsPunct(ch)) {
+				punctiationFrequencies[k] += 1
+			}
+		}
+
+	}
+
+	var decidedPlaintextIndex byte = math.MaxUint8
+	punctCount := math.MaxInt
+
+	// decide which plaintext has the least amount of punctiation
+	// (less punctiation = more likely to be the real plaintext)
+	for i, v := range(punctiationFrequencies) {
+		if v <= punctCount {
+			decidedPlaintextIndex = i
+			punctCount = v
+		}
+	}
+
+	if decidedPlaintextIndex == math.MaxUint8 {
+		return "", fmt.Errorf("unable to decide for 'the plaintext' in between %#v", possiblePlaintexts)
+	}
+
+	return possiblePlaintexts[decidedPlaintextIndex], nil
 
 }
