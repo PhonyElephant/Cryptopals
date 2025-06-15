@@ -53,7 +53,7 @@ func HexEncode(rawBytes []byte) string {
 
 }
 
-func XorEncrypt(plaintext, key []byte) []byte {
+func _xorEncrypt(plaintext, key []byte) []byte {
 
 	ciphertext := make([]byte, 0, len(plaintext))
 
@@ -62,6 +62,31 @@ func XorEncrypt(plaintext, key []byte) []byte {
 	}
 
 	return ciphertext
+
+}
+
+func _xorEncryptRepeating(plaintext, key []byte) []byte {
+
+	ciphertext := make([]byte, 0, len(plaintext))
+
+
+	for i := 0; i < len(plaintext); i++ {
+		ciphertext = append(ciphertext, plaintext[i] ^ key[i % len(key)])
+	}
+
+	return ciphertext
+
+}
+
+func XorEncrypt(plaintext, key []byte) []byte {
+
+	if len(plaintext) == len(key) {
+		return _xorEncrypt(plaintext, key)
+
+	} else {
+		return _xorEncryptRepeating(plaintext, key)
+
+	}
 
 }
 
