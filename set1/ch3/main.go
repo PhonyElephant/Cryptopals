@@ -29,7 +29,7 @@ func main() {
 
 		plaintext := string(rawPlaintextBytes)
 
-		if crypto_lib.IsAlpha(plaintext) {
+		if crypto_lib.IsText(plaintext) {
 			fmt.Printf("Key: %#x | Possible plaintext: %s\n", i, plaintext)
 			possiblePlaintexts = append(possiblePlaintexts, plaintext)
 		}
